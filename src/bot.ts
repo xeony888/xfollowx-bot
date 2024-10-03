@@ -182,8 +182,8 @@ client.on("interactionCreate", async (interaction) => {
                 );
             await interaction.showModal(modal);
         } else if (interaction.customId === "loop") {
-            loadTwitters(interaction.guild);
-            await interaction.reply({ content: "...", ephemeral: true });
+            const amount = await loadTwitters(interaction.guild);
+            await interaction.reply({ content: `Loaded ${amount} twitters`, ephemeral: true });
         }
     } else if (interaction.isModalSubmit() && interaction.customId === "server_link_form") {
         const input = interaction.fields.getTextInputValue("server_link_text_input");
