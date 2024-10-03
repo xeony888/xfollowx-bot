@@ -145,7 +145,7 @@ client.on("interactionCreate", async (interaction) => {
 
             const amount = await loadTwitters(interaction.guild);
             if (Number.isNaN(Number(amount))) {
-                await interaction.reply({ content: amount.error, ephemeral: true });
+                await interaction.reply({ content: `${amount.error}` || "Completed", ephemeral: true });
             } else {
                 await interaction.reply({ content: `Loaded ${amount} twitters`, ephemeral: true });
             }
