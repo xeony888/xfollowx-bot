@@ -115,7 +115,48 @@ client.on("guildCreate", async (guild: Guild) => {
     }
 });
 
-
+async function loadTwitters(guild: Guild) {
+    let channel: any = guild.channels.cache.find(channel => channel.name === "xfollowx");
+    // If the channel doesn't exist, create it
+    if (!channel) {
+        channel = await guild.channels.create({
+            name: "xfollowx",
+            type: ChannelType.GuildText,
+            permissionOverwrites: [
+                {
+                    id: guild.id, // Deny everyone
+                    deny: ["SendMessages"],
+                    allow: ["ViewChannel"]
+                },
+                {
+                    id: guild.client.user.id, // Allow the bot to send messages
+                    allow: ["SendMessages", "ViewChannel"]
+                }
+            ]
+        });
+    }
+    await guild.members.fetch();
+    const memberIds = guild.members.cache.map(member => member.id);
+    const data = await getTwitters(memberIds);
+    if (!data) return;
+    for (const point of data) {
+        const rows = [];
+        let messageContent = `Discord name: ${point.discordName}\n`;
+        for (const twitter of point.twitters) {
+            const twitterButton = new ButtonBuilder()
+                .setLabel(`Go to @${twitter}`)
+                .setStyle(ButtonStyle.Link)
+                .setURL(`https://x.com/${twitter}`);
+            const row = new ActionRowBuilder().addComponents(twitterButton);
+            rows.push(row);
+        }
+        await channel.send({
+            content: messageContent,
+            components: rows
+        });
+    }
+    return data.length;
+}
 client.on("interactionCreate", async (interaction) => {
     if (interaction.isButton()) {
         if (interaction.customId === "check_link_status") {
@@ -141,7 +182,7 @@ client.on("interactionCreate", async (interaction) => {
                 );
             await interaction.showModal(modal);
         } else if (interaction.customId === "loop") {
-            loop();
+            loadTwitters(interaction.guild);
             await interaction.reply({ content: "...", ephemeral: true });
         }
     } else if (interaction.isModalSubmit() && interaction.customId === "server_link_form") {
