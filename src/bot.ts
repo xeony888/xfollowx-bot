@@ -16,8 +16,8 @@ client.once("ready", () => {
 });
 
 async function loop() {
-    await client.guilds.fetch();
-    client.guilds.cache.forEach(loadTwitters);
+    //await client.guilds.fetch();
+    //client.guilds.cache.forEach(loadTwitters);
 }
 client.on("guildCreate", async (guild: Guild) => {
     try {
