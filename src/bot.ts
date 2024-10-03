@@ -138,7 +138,8 @@ async function loadTwitters(guild: Guild) {
     await guild.members.fetch();
     const memberIds = guild.members.cache.map(member => member.id);
     const data = await getTwitters(memberIds);
-    if (!data) return;
+
+    if (!data.length) return data;
     for (const point of data) {
         const rows = [];
         let messageContent = `Discord name: ${point.discordName}\n`;
@@ -183,7 +184,11 @@ client.on("interactionCreate", async (interaction) => {
             await interaction.showModal(modal);
         } else if (interaction.customId === "loop") {
             const amount = await loadTwitters(interaction.guild);
-            await interaction.reply({ content: `Loaded ${amount} twitters`, ephemeral: true });
+            if (Number.isNaN(Number(amount))) {
+                await interaction.reply({ content: amount.error, ephemeral: true });
+            } else {
+                await interaction.reply({ content: `Loaded ${amount} twitters`, ephemeral: true });
+            }
         }
     } else if (interaction.isModalSubmit() && interaction.customId === "server_link_form") {
         const input = interaction.fields.getTextInputValue("server_link_text_input");

@@ -24,9 +24,5 @@ export async function checkServerLink(guildId: string) {
 }
 export async function getTwitters(memberIds: string[]) {
     const response = await axios.get(`${process.env.SERVER_URL}/bot/twitters?key=${process.env.DISCORD_BOT_TOKEN}&memberIds=${memberIds}`);
-    if (response.status === 200) {
-        return response.data;
-    } else {
-        return [];
-    }
+    return response.data;
 }
