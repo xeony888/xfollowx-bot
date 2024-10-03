@@ -17,47 +17,7 @@ client.once("ready", () => {
 
 async function loop() {
     await client.guilds.fetch();
-    client.guilds.cache.forEach(async (guild) => {
-        let channel: any = guild.channels.cache.find(channel => channel.name === "xfollowx");
-        // If the channel doesn't exist, create it
-        if (!channel) {
-            channel = await guild.channels.create({
-                name: "xfollowx",
-                type: ChannelType.GuildText,
-                permissionOverwrites: [
-                    {
-                        id: guild.id, // Deny everyone
-                        deny: ["SendMessages"],
-                        allow: ["ViewChannel"]
-                    },
-                    {
-                        id: guild.client.user.id, // Allow the bot to send messages
-                        allow: ["SendMessages", "ViewChannel"]
-                    }
-                ]
-            });
-        }
-        await guild.members.fetch();
-        const memberIds = guild.members.cache.map(member => member.id);
-        const data = await getTwitters(memberIds);
-        if (!data) return;
-        for (const point of data) {
-            const rows = [];
-            let messageContent = `Discord name: ${point.discordName}\n`;
-            for (const twitter of point.twitters) {
-                const twitterButton = new ButtonBuilder()
-                    .setLabel(`Go to @${twitter}`)
-                    .setStyle(ButtonStyle.Link)
-                    .setURL(`https://x.com/${twitter}`);
-                const row = new ActionRowBuilder().addComponents(twitterButton);
-                rows.push(row);
-            }
-            await channel.send({
-                content: messageContent,
-                components: rows
-            });
-        }
-    });
+    client.guilds.cache.forEach(loadTwitters);
 }
 client.on("guildCreate", async (guild: Guild) => {
     try {
@@ -137,20 +97,19 @@ async function loadTwitters(guild: Guild) {
     }
     await guild.members.fetch();
     const memberIds = guild.members.cache.map(member => member.id);
-    const data = await getTwitters(memberIds);
+    const data = await getTwitters(memberIds, guild.id);
 
     if (!data.length) return data;
-    for (const point of data) {
+    for (const user of data) {
         const rows = [];
-        let messageContent = `Discord name: ${point.discordName}\n`;
-        for (const twitter of point.twitters) {
-            const twitterButton = new ButtonBuilder()
-                .setLabel(`Go to @${twitter}`)
-                .setStyle(ButtonStyle.Link)
-                .setURL(`https://x.com/${twitter}`);
-            const row = new ActionRowBuilder().addComponents(twitterButton);
-            rows.push(row);
-        }
+        let messageContent = `Discord name: ${user.discordName}\n`;
+        const twitterButton = new ButtonBuilder()
+            .setLabel(`Go to ${user.twitter}`)
+            .setStyle(ButtonStyle.Link)
+            .setURL(`https://x.com/${user.twitter}`);
+        const row = new ActionRowBuilder().addComponents(twitterButton);
+        rows.push(row);
+
         await channel.send({
             content: messageContent,
             components: rows
@@ -183,6 +142,7 @@ client.on("interactionCreate", async (interaction) => {
                 );
             await interaction.showModal(modal);
         } else if (interaction.customId === "loop") {
+
             const amount = await loadTwitters(interaction.guild);
             if (Number.isNaN(Number(amount))) {
                 await interaction.reply({ content: amount.error, ephemeral: true });

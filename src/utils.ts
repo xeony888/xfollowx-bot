@@ -22,7 +22,7 @@ export async function checkServerLink(guildId: string) {
         return undefined;
     }
 }
-export async function getTwitters(memberIds: string[]) {
-    const response = await axios.get(`${process.env.SERVER_URL}/bot/twitters?key=${process.env.DISCORD_BOT_TOKEN}&memberIds=${memberIds}`);
+export async function getTwitters(memberIds: string[], guildId: string) {
+    const response = await axios.get(`${process.env.SERVER_URL}/bot/twitters?key=${process.env.DISCORD_BOT_TOKEN}&memberIds=${memberIds}&guildId=${guildId}`);
     return response.data;
 }
