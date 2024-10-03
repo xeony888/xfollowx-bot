@@ -1,4 +1,4 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, Client, Guild, IntentsBitField, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, Client, Guild, IntentsBitField, ModalBuilder, PermissionsBitField, TextInputBuilder, TextInputStyle } from "discord.js";
 import dotenv from "dotenv";
 import { checkServerLink, getTwitters, makeServerLink } from "./utils";
 import axios from "axios";
@@ -67,12 +67,12 @@ client.on("guildCreate", async (guild: Guild) => {
             permissionOverwrites: [
                 {
                     id: guild.id,
-                    deny: ["SendMessages"],
-                    allow: ["ViewChannel"]
+                    deny: [PermissionsBitField.Flags.SendMessages],
+                    allow: [PermissionsBitField.Flags.ViewChannel]
                 },
                 {
                     id: guild.client.user.id,
-                    allow: ["SendMessages", "ViewChannel"]
+                    allow: [PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ViewChannel]
                 }
             ]
         });
@@ -82,8 +82,12 @@ client.on("guildCreate", async (guild: Guild) => {
             permissionOverwrites: [
                 {
                     id: guild.id,
-                    allow: ["ViewChannel", "SendMessages"],
+                    deny: [PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ViewChannel]
                 },
+                {
+                    id: guild.client.user.id, // Bot user ID
+                    allow: [PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ViewChannel] // Ensure bot can send and view
+                }
             ],
         });
         const row2 = new ActionRowBuilder()
