@@ -1,6 +1,6 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, Client, Guild, IntentsBitField, ModalBuilder, PermissionsBitField, TextInputBuilder, TextInputStyle } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, ChannelType, Client, Guild, IntentsBitField, Interaction, ModalBuilder, PermissionsBitField, TextInputBuilder, TextInputStyle } from "discord.js";
 import dotenv from "dotenv";
-import { checkServerLink, getTwitters, makeServerLink } from "./utils";
+import { checkServerLink, getFollowed, getTwitters, makeServerLink } from "./utils";
 import axios from "axios";
 
 dotenv.config();
@@ -50,6 +50,18 @@ client.on("guildCreate", async (guild: Guild) => {
                 }
             ],
         });
+        const row1 = new ActionRowBuilder()
+            .addComponents(
+                new ButtonBuilder()
+                    .setCustomId("twitters")
+                    .setLabel("View other users' X info")
+                    .setStyle(ButtonStyle.Primary)
+            );
+        await channel1.send({
+            content: "Click the button to view the other users' X accounts",
+            // @ts-ignore
+            components: [row1]
+        });
         const row2 = new ActionRowBuilder()
             .addComponents(
                 new ButtonBuilder()
@@ -60,10 +72,10 @@ client.on("guildCreate", async (guild: Guild) => {
                     .setCustomId("check_link_status")
                     .setLabel("Check Link Status")
                     .setStyle(ButtonStyle.Secondary),
-                new ButtonBuilder()
-                    .setCustomId("loop")
-                    .setLabel("Reload User X Accounts")
-                    .setStyle(ButtonStyle.Danger)
+                // new ButtonBuilder()
+                //     .setCustomId("loop")
+                //     .setLabel("Reload User X Accounts")
+                //     .setStyle(ButtonStyle.Danger)
             );
         await channel2.send({
             content: 'Admin Page. Make sure to link your server to XFollowX.',
@@ -75,7 +87,7 @@ client.on("guildCreate", async (guild: Guild) => {
     }
 });
 
-async function loadTwitters(guild: Guild) {
+async function loadTwitters(guild: Guild, interaction: ButtonInteraction) {
     let channel: any = guild.channels.cache.find(channel => channel.name === "xfollowx");
     // If the channel doesn't exist, create it
     if (!channel) {
@@ -97,23 +109,33 @@ async function loadTwitters(guild: Guild) {
     }
     await guild.members.fetch();
     const memberIds = guild.members.cache.map(member => member.id);
-    const data = await getTwitters(memberIds, guild.id);
-
-    if (!data.length) return data;
+    let data = await getTwitters(memberIds, guild.id);
+    const followed = await getFollowed(interaction.user.id);
+    data = data.filter((d: any) => !followed.includes(d.discordId) && d.discordId !== interaction.user.id);
+    if (data.error) return data;
     for (const user of data) {
         const rows = [];
         let messageContent = `Discord name: ${user.discordName}\n`;
         const twitterButton = new ButtonBuilder()
             .setLabel(`Go to ${user.twitter}`)
             .setStyle(ButtonStyle.Link)
-            .setURL(`https://x.com/${user.twitter}`);
+            .setURL(`${process.env.SERVER_URL}/bot/action/follow?key=${process.env.DISCORD_BOT_TOKEN}&follower=${interaction.user.id}&followee=${user.discordId}`); // change this to fetch backend
         const row = new ActionRowBuilder().addComponents(twitterButton);
         rows.push(row);
 
-        await channel.send({
-            content: messageContent,
-            components: rows
-        });
+        if (interaction.replied || interaction.deferred) {
+            await interaction.followUp({
+                content: messageContent,
+                components: rows,
+                ephemeral: true
+            });
+        } else {
+            await interaction.reply({
+                content: messageContent,
+                components: rows,
+                ephemeral: true
+            });
+        }
     }
     return data.length;
 }
@@ -143,11 +165,19 @@ client.on("interactionCreate", async (interaction) => {
             await interaction.showModal(modal);
         } else if (interaction.customId === "loop") {
 
-            const amount = await loadTwitters(interaction.guild);
+            // const amount = await loadTwitters(interaction.guild);
+            // if (Number.isNaN(Number(amount))) {
+            //     await interaction.reply({ content: `${amount.error}` || "Completed", ephemeral: true });
+            // } else {
+            //     await interaction.reply({ content: `Loaded ${amount} twitters`, ephemeral: true });
+            // }
+        } else if (interaction.customId === "twitters") {
+            await interaction.deferReply({ ephemeral: true });
+            const amount = await loadTwitters(interaction.guild, interaction);
             if (Number.isNaN(Number(amount))) {
-                await interaction.reply({ content: `${amount.error}` || "Completed", ephemeral: true });
-            } else {
-                await interaction.reply({ content: `Loaded ${amount} twitters`, ephemeral: true });
+                await interaction.followUp({ content: `${amount.error}` || "Completed", ephemeral: true });
+            } else if (amount === 0) {
+                await interaction.followUp({ content: "You've followed everyone in the server!", ephemeral: true });
             }
         }
     } else if (interaction.isModalSubmit() && interaction.customId === "server_link_form") {
