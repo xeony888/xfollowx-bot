@@ -119,7 +119,7 @@ async function loadTwitters(guild: Guild, interaction: ButtonInteraction) {
         const twitterButton = new ButtonBuilder()
             .setLabel(`Go to ${user.twitter}`)
             .setStyle(ButtonStyle.Link)
-            .setURL(`${process.env.SERVER_URL}/bot/action/follow?key=${process.env.DISCORD_BOT_TOKEN}&follower=${interaction.user.id}&followee=${user.discordId}`); // change this to fetch backend
+            .setURL(`${process.env.SERVER_URL}/bot/action/follow?key=${process.env.DISCORD_BOT_TOKEN}&follower=${interaction.user.id}&followee=${user.discordId}&url=${user.twitter}`);
         const row = new ActionRowBuilder().addComponents(twitterButton);
         rows.push(row);
 
