@@ -111,8 +111,8 @@ async function loadTwitters(guild: Guild, interaction: ButtonInteraction) {
     const memberIds = guild.members.cache.map(member => member.id);
     let data = await getTwitters(memberIds, guild.id);
     const followed = await getFollowed(interaction.user.id);
-    data = data.filter((d: any) => !followed.includes(d.discordId) && d.discordId !== interaction.user.id);
     if (data.error) return data;
+    data = data.filter((d: any) => !followed.includes(d.discordId) && d.discordId !== interaction.user.id);
     for (const user of data) {
         const rows = [];
         let messageContent = `Discord name: ${user.discordName}\n`;
