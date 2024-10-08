@@ -182,7 +182,7 @@ client.on("interactionCreate", async (interaction) => {
         }
     } else if (interaction.isModalSubmit() && interaction.customId === "server_link_form") {
         const input = interaction.fields.getTextInputValue("server_link_text_input");
-        const status = await makeServerLink(interaction.guild!.id, interaction.user.id, input);
+        const status = await makeServerLink(interaction.guild!.id, interaction.user.id, input, interaction.guild.name);
         if (status) {
             await interaction.reply({ content: "Link success!", ephemeral: true });
         } else {

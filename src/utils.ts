@@ -1,11 +1,12 @@
 import axios from "axios";
 
 
-export async function makeServerLink(guildId: string, userId: string, serverId: string) {
+export async function makeServerLink(guildId: string, userId: string, serverId: string, guildName: string) {
     const response = await axios.post(`${process.env.SERVER_URL}/bot/link?key=${process.env.DISCORD_BOT_TOKEN}`, {
         guildId,
         userId,
-        serverId
+        serverId,
+        guildName,
     });
     if (response.status === 200) {
         return true;
